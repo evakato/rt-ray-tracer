@@ -1,0 +1,4 @@
+﻿C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\Microsoft.CppBuild.targets(513,5): warning MSB8028: The intermediate directory (C:\Users\evaka\OneDrive\Desktop\rt-ray-tracer\1. Basics\x64\Release\) contains files shared from another project (1. Basics.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+  renderer.cpp
+     Creating library C:\Users\evaka\OneDrive\Desktop\rt-ray-tracer\1. Basics\x64\agr.lib and object C:\Users\evaka\OneDrive\Desktop\rt-ray-tracer\1. Basics\x64\agr.exp
+  basics.vcxproj -> C:\Users\evaka\OneDrive\Desktop\rt-ray-tracer\1. Basics\x64\agr.exe
