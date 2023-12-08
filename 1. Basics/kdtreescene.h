@@ -49,7 +49,6 @@ namespace Tmpl8 {
 					&tri[t].vertex1.x, &tri[t].vertex1.y, &tri[t].vertex1.z,
 					&tri[t].vertex2.x, &tri[t].vertex2.y, &tri[t].vertex2.z);
 				tri[t].ComputeAABB();
-				tri[t].centroid = tri[t].vertex0 + tri[t].vertex1 + tri[t].vertex2 * 0.3333f;
 			}
 		}
 
@@ -121,12 +120,13 @@ namespace Tmpl8 {
 			root.leftNode = 0;
 			vector<int> tris(N);
 			for (int i = 0; i < N; i++)
-				tris.push_back(i);
+				tris[i] = i;
 			root.tris = tris;
 			UpdateNodeBounds(rootNodeIdx);
+			printf("%f %f %f %f %f %f\n", root.aabbMin[0], root.aabbMin[1], root.aabbMin[2], root.aabbMax[0], root.aabbMax[1], root.aabbMax[2]);
 
 			Timer t;
-			Subdivide(rootNodeIdx, 0, 1);
+			Subdivide(rootNodeIdx, 1);
 			printf("KD (%i nodes) constructed in %.2fms.\n", nodesUsed, t.elapsed() * 1000);
 		}
 
@@ -152,47 +152,61 @@ namespace Tmpl8 {
 			float bestCost = 1e30f;
 			for (int a = 0; a < 3; a++)
 			{
-				float boundsMin = 1e30f, boundsMax = -1e30f;
-				for (uint i = 0; i < node.tris.size(); i++)
-				{
-					Tri& triangle = tri[node.tris[i]];
-					boundsMin = min(boundsMin, triangle.centroid[a]);
-					boundsMax = max(boundsMax, triangle.centroid[a]);
-				}
+				float boundsMin = node.aabbMin[a], boundsMax = node.aabbMax[a];
 				if (boundsMin == boundsMax) continue;
 				// populate the bins
-				Bin bin[BINS];
+				Bin leftBin[BINS];
+				Bin rightBin[BINS];
+				//printf("%f %f\n",  boundsMin, boundsMax);
 				float scale = BINS / (boundsMax - boundsMin);
 				for (uint i = 0; i < node.tris.size(); i++)
 				{
 					Tri& triangle = tri[node.tris[i]];
-					int binIdx = min(BINS - 1, (int)((triangle.centroid[a] - boundsMin) * scale));
-					bin[binIdx].triCount++;
-					bin[binIdx].bounds.grow(triangle.vertex0);
-					bin[binIdx].bounds.grow(triangle.vertex1);
-					bin[binIdx].bounds.grow(triangle.vertex2);
+					if (triangle.aabbMin[a] >= boundsMin) {
+						int leftBinIdx = min(BINS - 1, (int)((triangle.aabbMin[a] - boundsMin) * scale));
+						leftBin[leftBinIdx].triCount++;
+						leftBin[leftBinIdx].bounds.grow(triangle.vertex0);
+						leftBin[leftBinIdx].bounds.grow(triangle.vertex1);
+						leftBin[leftBinIdx].bounds.grow(triangle.vertex2);
+					}
+					if (boundsMax >= triangle.aabbMax[a]) {
+						int rightBinIdx = BINS - 1 - max(0, (int)((boundsMax - triangle.aabbMax[a]) * scale));
+						rightBin[rightBinIdx].triCount++;
+						rightBin[rightBinIdx].bounds.grow(triangle.vertex0);
+						rightBin[rightBinIdx].bounds.grow(triangle.vertex1);
+						rightBin[rightBinIdx].bounds.grow(triangle.vertex2);
+					}
+
+					//printf("%d %d %f %f\n", leftBinIdx, rightBinIdx, triangle.aabbMin[a], triangle.aabbMax[a]);
 				}
+				//for (int i = 0; i < BINS; i++)
+					//printf("%d left bin tri count %d right bin tri count %d \n", i, leftBin[i].triCount, rightBin[i].triCount);
 				// gather data for the 7 planes between the 8 bins
 				float leftArea[BINS - 1], rightArea[BINS - 1];
 				int leftCount[BINS - 1], rightCount[BINS - 1];
 				aabb leftBox, rightBox;
 				int leftSum = 0, rightSum = 0;
-				for (int i = 0; i < BINS - 1; i++)
-				{
-					leftSum += bin[i].triCount;
-					leftCount[i] = leftSum;
-					leftBox.grow(bin[i].bounds);
-					leftArea[i] = leftBox.area();
-					rightSum += bin[BINS - 1 - i].triCount;
-					rightCount[BINS - 2 - i] = rightSum;
-					rightBox.grow(bin[BINS - 1 - i].bounds);
-					rightArea[BINS - 2 - i] = rightBox.area();
-				}
-				// calculate SAH cost for the 7 planes
 				scale = (boundsMax - boundsMin) / BINS;
 				for (int i = 0; i < BINS - 1; i++)
 				{
+					leftSum += leftBin[i].triCount;
+					leftCount[i] = leftSum;
+					leftBox.grow(leftBin[i].bounds);
+					leftBox.bmax[a] = boundsMin + (i + 1) * scale;
+					leftArea[i] = leftBox.area();
+				}
+				for (int i = BINS - 2; i >= 0; i--) {
+					rightSum += rightBin[i+1].triCount;
+					rightCount[i] = rightSum;
+					rightBox.grow(rightBin[i + 1].bounds);
+					rightBox.bmin[a] = boundsMin + scale * (i + 1);
+					rightArea[i] = rightBox.area();
+				}
+				// calculate SAH cost for the 7 planes
+				for (int i = 0; i < BINS - 1; i++)
+				{
 					float planeCost = leftCount[i] * leftArea[i] + rightCount[i] * rightArea[i];
+					//printf("axis %d plane: %d best cost: %f plane cost %f left count %d right count %d\n", a, i, bestCost, planeCost, leftCount[i], rightCount[i]);
 					if (planeCost < bestCost)
 						axis = a, splitPos = boundsMin + scale * (i + 1), bestCost = planeCost;
 				}
@@ -223,35 +237,36 @@ namespace Tmpl8 {
 			return box;
 		}
 #endif
+		void PrintTris(KDNode &node) {
+			for (int i = 0; i < N; i++)
+				printf("%f %f %f %f %f %f\n", tri[node.tris[i]].aabbMin[0],  tri[node.tris[i]].aabbMin[1], tri[node.tris[i]].aabbMin[2], tri[node.tris[i]].aabbMax[0], tri[node.tris[i]].aabbMax[1],tri[node.tris[i]].aabbMax[2]);
+		}
 
-		void Subdivide(uint nodeIdx, int axis, int maxDepth)
+		void Subdivide(uint nodeIdx, int maxDepth)
 		{
-			//if (nodesUsed >= N - 1) return;
-			KDNode& node = kdNode[nodeIdx];
 			if (maxDepth >= 13 ) return;
+			KDNode& node = kdNode[nodeIdx];
 
-			// determine split axis and position
-			float3 extent = node.aabbMax - node.aabbMin;
-			float splitPos = node.aabbMin[axis] + extent[axis] * 0.5f;
-
-			/*
 			int axis;
 			float splitPos;
 			float splitCost = FindBestSplitPlane(node, axis, splitPos);
 			float nosplitCost = CalculateNodeCost(node);
+			//printf("split: %f nosplit: %f pos: %f axis: %d\n", splitCost, nosplitCost, splitPos, axis);
+
 			if (splitCost >= nosplitCost) return;
-			*/
 
 			vector<int> leftTris = {};
 			vector<int> rightTris = {};
 			for (int i = 0; i < node.tris.size(); i++) {
-				if (tri[node.tris[i]].aabbMin[axis] < splitPos) {
+				if (tri[node.tris[i]].aabbMin[axis] <= splitPos) {
 					leftTris.push_back(node.tris[i]);
 				}
-				if (tri[node.tris[i]].aabbMax[axis] > splitPos) {
+				if (tri[node.tris[i]].aabbMax[axis] >= splitPos) {
 					rightTris.push_back(node.tris[i]);
 				}
 			}
+			//PrintTris(node);
+			//printf("left: %d right: %d\n", leftTris.size(), rightTris.size());
 
 			// abort split if one of the sides is empty
 			if (leftTris.size() == 0 || rightTris.size() == 0) return;
@@ -269,8 +284,8 @@ namespace Tmpl8 {
 			kdNode[rightChildIdx].aabbMin[axis] = splitPos;
 
 			// recurse
-			Subdivide(leftChildIdx, (axis + 1) % 3, maxDepth + 1);
-			Subdivide(rightChildIdx, (axis + 1) % 3, maxDepth + 1);
+			Subdivide(leftChildIdx, maxDepth + 1);
+			Subdivide(rightChildIdx, maxDepth + 1);
 		}
 
 		Tri tri[N];
