@@ -28,14 +28,10 @@ namespace Tmpl8 {
 			float3 aabbMin, aabbMax;
 			uint leftNode;
 			// rightNode is just leftNode + 1
-			uint firstTri;
-			uint triCount;
-			bool isLeaf() { return triCount > 0; }
-			void printNode() {
-				printf("left: %d right: %d firstTri: %d triCount: %d \n", leftNode, leftNode == 0 ? 0 : leftNode + 1, firstTri, triCount);
-				printf("\taabb: %f %f %f %f %f %f\n", aabbMin[0], aabbMin[1], aabbMin[2], aabbMax[0], aabbMax[1], aabbMax[2]);
-			}
+			vector<int> tris;
 		};
+
+		struct Bin { aabb bounds; int triCount = 0; };
 		
 		KDTreeScene() = default;
 
@@ -53,6 +49,7 @@ namespace Tmpl8 {
 					&tri[t].vertex1.x, &tri[t].vertex1.y, &tri[t].vertex1.z,
 					&tri[t].vertex2.x, &tri[t].vertex2.y, &tri[t].vertex2.z);
 				tri[t].ComputeAABB();
+				tri[t].centroid = tri[t].vertex0 + tri[t].vertex1 + tri[t].vertex2 * 0.3333f;
 			}
 		}
 
@@ -85,34 +82,16 @@ namespace Tmpl8 {
 			}
 		}
 
-		/*
-		void IntersectKD(Ray& ray, const uint nodeIdx)
-		{
-			KDNode& node = kdNode[nodeIdx];
-			if (IntersectAABB(ray, node.aabbMin, node.aabbMax) == 1e30f)
-				return;
-			if (node.isLeaf())
-			{
-				for (uint i = 0; i < node.triCount; i++)
-					tri[triIdx[node.firstTri + i]].IntersectTri(ray);
-			}
-			else
-			{
-				IntersectKD(ray, node.leftNode);
-				IntersectKD(ray, node.leftNode + 1);
-			}
-		}*/
-
 		void IntersectKD(Ray& ray)
 		{
 			KDNode* node = &kdNode[rootNodeIdx], * stack[64];
 			uint stackPtr = 0;
 			while (1)
 			{
-				if (node->isLeaf())
+				if (node->tris.size() > 0)
 				{
-					for (uint i = 0; i < node->triCount; i++)
-						tri[triIdx[node->firstTri + i]].IntersectTri(ray);
+					for (uint i = 0; i < node->tris.size(); i++)
+						tri[node->tris[i]].IntersectTri(ray);
 					if (stackPtr == 0) break; else node = stack[--stackPtr];
 					continue;
 				}
@@ -136,27 +115,19 @@ namespace Tmpl8 {
 		}
 
 		void BuildKDTree() {
-			kdNode = (KDNode*)_aligned_malloc(sizeof(kdNode) * N * 4, 64);
-			for (int i = 0; i < N; i++) triIdx[i] = i;
+			kdNode = (KDNode*)_aligned_malloc(sizeof(kdNode) * N * sizeof(int) * 4, 64);
 
 			KDNode& root = kdNode[rootNodeIdx];
 			root.leftNode = 0;
-			root.firstTri = 0;
-			root.triCount = N;
+			vector<int> tris(N);
+			for (int i = 0; i < N; i++)
+				tris.push_back(i);
+			root.tris = tris;
 			UpdateNodeBounds(rootNodeIdx);
-			printf("root\n");
-			root.printNode();
 
 			Timer t;
 			Subdivide(rootNodeIdx, 0, 1);
 			printf("KD (%i nodes) constructed in %.2fms.\n", nodesUsed, t.elapsed() * 1000);
-
-#if 0
-			for (int i = 1000; i < nodesUsed; i++) {
-				printf("%d ---- ", i);
-				kdNode[i].printNode();
-			}
-#endif
 		}
 
 		void UpdateNodeBounds(uint nodeIdx)
@@ -164,10 +135,9 @@ namespace Tmpl8 {
 			KDNode& node = kdNode[nodeIdx];
 			node.aabbMin = float3(1e30f);
 			node.aabbMax = float3(-1e30f);
-			for (uint first = node.firstTri, i = 0; i < node.triCount; i++)
+			for (int i = 0; i < node.tris.size(); i++)
 			{
-				uint leafTriIdx = triIdx[first + i];
-				Tri& leafTri = tri[leafTriIdx];
+				Tri& leafTri = tri[node.tris[i]];
 				node.aabbMin = fminf(node.aabbMin, leafTri.vertex0),
 				node.aabbMin = fminf(node.aabbMin, leafTri.vertex1),
 				node.aabbMin = fminf(node.aabbMin, leafTri.vertex2),
@@ -177,6 +147,67 @@ namespace Tmpl8 {
 			}
 		}
 
+		float FindBestSplitPlane(KDNode& node, int& axis, float& splitPos)
+		{
+			float bestCost = 1e30f;
+			for (int a = 0; a < 3; a++)
+			{
+				float boundsMin = 1e30f, boundsMax = -1e30f;
+				for (uint i = 0; i < node.tris.size(); i++)
+				{
+					Tri& triangle = tri[node.tris[i]];
+					boundsMin = min(boundsMin, triangle.centroid[a]);
+					boundsMax = max(boundsMax, triangle.centroid[a]);
+				}
+				if (boundsMin == boundsMax) continue;
+				// populate the bins
+				Bin bin[BINS];
+				float scale = BINS / (boundsMax - boundsMin);
+				for (uint i = 0; i < node.tris.size(); i++)
+				{
+					Tri& triangle = tri[node.tris[i]];
+					int binIdx = min(BINS - 1, (int)((triangle.centroid[a] - boundsMin) * scale));
+					bin[binIdx].triCount++;
+					bin[binIdx].bounds.grow(triangle.vertex0);
+					bin[binIdx].bounds.grow(triangle.vertex1);
+					bin[binIdx].bounds.grow(triangle.vertex2);
+				}
+				// gather data for the 7 planes between the 8 bins
+				float leftArea[BINS - 1], rightArea[BINS - 1];
+				int leftCount[BINS - 1], rightCount[BINS - 1];
+				aabb leftBox, rightBox;
+				int leftSum = 0, rightSum = 0;
+				for (int i = 0; i < BINS - 1; i++)
+				{
+					leftSum += bin[i].triCount;
+					leftCount[i] = leftSum;
+					leftBox.grow(bin[i].bounds);
+					leftArea[i] = leftBox.area();
+					rightSum += bin[BINS - 1 - i].triCount;
+					rightCount[BINS - 2 - i] = rightSum;
+					rightBox.grow(bin[BINS - 1 - i].bounds);
+					rightArea[BINS - 2 - i] = rightBox.area();
+				}
+				// calculate SAH cost for the 7 planes
+				scale = (boundsMax - boundsMin) / BINS;
+				for (int i = 0; i < BINS - 1; i++)
+				{
+					float planeCost = leftCount[i] * leftArea[i] + rightCount[i] * rightArea[i];
+					if (planeCost < bestCost)
+						axis = a, splitPos = boundsMin + scale * (i + 1), bestCost = planeCost;
+				}
+			}
+			return bestCost;
+		}
+
+		float CalculateNodeCost(KDNode& node)
+		{
+			float3 e = node.aabbMax - node.aabbMin; // extent of the node
+			float surfaceArea = e.x * e.y + e.y * e.z + e.z * e.x;
+			return node.tris.size() * surfaceArea;
+		}
+
+#if 0
 		aabb CalculateBox(uint firstTri, uint triCount) {
 			aabb box;
 			for (uint first = firstTri, i = 0; i < triCount; i++) {
@@ -191,133 +222,58 @@ namespace Tmpl8 {
 			}
 			return box;
 		}
-
-		void PrintTris(int start, int end, int axis) {
-			for (int ind = start; ind < end; ind++) {
-				//printf("%f %f %f %f %f %f\n", tri[triIdx[ind]].aabbMin[0], tri[triIdx[ind]].aabbMin[1], tri[triIdx[ind]].aabbMin[2], tri[triIdx[ind]].aabbMax[0], tri[triIdx[ind]].aabbMax[1], tri[triIdx[ind]].aabbMax[2]);
-				printf("%d: %f %f \n", ind, tri[triIdx[ind]].aabbMin[axis], tri[triIdx[ind]].aabbMax[axis]);
-			}
-		}
-
-		float EvaluateSAH(KDNode& node, int axis, float pos)
-		{
-			// determine triangle counts and bounds for this split candidate
-			aabb leftBox, rightBox;
-			int leftCount = 0, rightCount = 0;
-			for (uint i = 0; i < node.triCount; i++)
-			{
-				Tri& triangle = tri[triIdx[node.firstTri + i]];
-				if (triangle.aabbMin[axis] <= pos)
-				{
-					leftCount++;
-					leftBox.grow(triangle.vertex0);
-					leftBox.grow(triangle.vertex1);
-					leftBox.grow(triangle.vertex2);
-				}
-				if (triangle.aabbMax[axis] >= pos)
-				{
-					rightCount++;
-					rightBox.grow(triangle.vertex0);
-					rightBox.grow(triangle.vertex1);
-					rightBox.grow(triangle.vertex2);
-				}
-			}
-			leftBox.bmax[axis] = pos;
-			rightBox.bmin[axis] = pos;
-			float cost = leftCount * leftBox.area() + rightCount * rightBox.area();
-			return cost > 0 ? cost : 1e30f;
-		}
+#endif
 
 		void Subdivide(uint nodeIdx, int axis, int maxDepth)
 		{
 			//if (nodesUsed >= N - 1) return;
 			KDNode& node = kdNode[nodeIdx];
-			if (maxDepth >= 5 ) return;
+			if (maxDepth >= 13 ) return;
 
 			// determine split axis and position
 			float3 extent = node.aabbMax - node.aabbMin;
 			float splitPos = node.aabbMin[axis] + extent[axis] * 0.5f;
 
-			// abort split if cost sucks 
-#if 0
-			float cost = EvaluateSAH(node, axis, splitPos);
-			float3 e = node.aabbMax - node.aabbMin; // extent of parent
-			float parentArea = e.x * e.y + e.y * e.z + e.z * e.x;
-			float parentCost = node.triCount * parentArea;
-			if (cost >= parentCost) return;
-#endif
+			/*
+			int axis;
+			float splitPos;
+			float splitCost = FindBestSplitPlane(node, axis, splitPos);
+			float nosplitCost = CalculateNodeCost(node);
+			if (splitCost >= nosplitCost) return;
+			*/
 
-			// in-place partition
-			int i = node.firstTri;
-			int j = i + node.triCount - 1;
-			while (i <= j)
-			{
-				if (tri[triIdx[i]].aabbMin[axis] < splitPos)
-					i++;
-				else
-					swap(triIdx[i], triIdx[j--]);
-			}
-			int k = node.firstTri;
-			int ov = i - 1; // triangles overlapping with split plane
-			while (k <= ov) {
-				if (tri[triIdx[k]].aabbMax[axis] < splitPos)
-					k++;
-				else
-					swap(triIdx[k], triIdx[ov--]);
+			vector<int> leftTris = {};
+			vector<int> rightTris = {};
+			for (int i = 0; i < node.tris.size(); i++) {
+				if (tri[node.tris[i]].aabbMin[axis] < splitPos) {
+					leftTris.push_back(node.tris[i]);
+				}
+				if (tri[node.tris[i]].aabbMax[axis] > splitPos) {
+					rightTris.push_back(node.tris[i]);
+				}
 			}
 
 			// abort split if one of the sides is empty
-			int leftCount = i - node.firstTri;
-			int rightCount = node.triCount - (k - node.firstTri);
-			printf("axis: %d splitpos: %f i: %d ov:%d k: %d\n ---- left first: %d left count: %d right first: %d right count: %d\n", axis, splitPos, i, ov, k, node.firstTri, leftCount, k, rightCount);
-			PrintTris(node.firstTri, node.firstTri + node.triCount, axis);
-			if (leftCount == 0 || leftCount == node.triCount || rightCount == 0) return;
-			/*
-			aabb leftBox = CalculateBox(node.firstTri, leftCount);
-			leftBox.bmax[axis] = splitPos;
-			float leftCost = leftCount * leftBox.area();
-			aabb rightBox = CalculateBox(k, rightCount);
-			rightBox.bmin[axis] = splitPos;
-			float rightCost = rightCount * rightBox.area();
-			float combinedCost = leftCost + rightCost > 0 ? leftCost + rightCost : 1e30f;
-			*/
-			//printf("left: %d %f %f right: %d %f %f parent: %d %f %f", leftCount, leftBox.area(), leftCost, rightCount, rightBox.area(), rightCost, node.triCount, parentArea, parentCost);
-			//if (combinedCost >= parentCost) return;
+			if (leftTris.size() == 0 || rightTris.size() == 0) return;
 
 			// create child nodes
 			int leftChildIdx = nodesUsed++;
 			int rightChildIdx = nodesUsed++;
 			node.leftNode = leftChildIdx;
-			kdNode[leftChildIdx].firstTri = node.firstTri;
-			kdNode[leftChildIdx].triCount = leftCount;
-			kdNode[rightChildIdx].firstTri = k;
-			kdNode[rightChildIdx].triCount = rightCount;
-			node.triCount = 0;
+			kdNode[leftChildIdx].tris = leftTris;
+			kdNode[rightChildIdx].tris = rightTris;
+			node.tris = {};
 			UpdateNodeBounds(leftChildIdx);
 			UpdateNodeBounds(rightChildIdx);
-			//kdNode[leftChildIdx].aabbMax = leftBox.bmax;
-			//kdNode[leftChildIdx].aabbMin = leftBox.bmin;
-			//kdNode[rightChildIdx].aabbMax = rightBox.bmax;
-			//kdNode[rightChildIdx].aabbMin = rightBox.bmin;
 			kdNode[leftChildIdx].aabbMax[axis] = splitPos;
 			kdNode[rightChildIdx].aabbMin[axis] = splitPos;
-
-			/*
-			printf("\nleft child first tri: %d, tricount: %d\n", kdNode[leftChildIdx].firstTri, kdNode[leftChildIdx].triCount);
-			printf("left aabb: %f %f %f %f %f %f\n", kdNode[leftChildIdx].aabbMin[0], kdNode[leftChildIdx].aabbMin[1], kdNode[leftChildIdx].aabbMin[2], kdNode[leftChildIdx].aabbMax[0], kdNode[leftChildIdx].aabbMax[1], kdNode[leftChildIdx].aabbMax[2]);
-			printf("right child first tri: %d, tricount: %d\n", kdNode[rightChildIdx].firstTri, kdNode[rightChildIdx].triCount);
-			printf("right aabb: %f %f %f %f %f %f\n", kdNode[rightChildIdx].aabbMin[0], kdNode[rightChildIdx].aabbMin[1], kdNode[rightChildIdx].aabbMin[2], kdNode[rightChildIdx].aabbMax[0], kdNode[rightChildIdx].aabbMax[1], kdNode[rightChildIdx].aabbMax[2]);
-			printf("\n");
-			*/
 
 			// recurse
 			Subdivide(leftChildIdx, (axis + 1) % 3, maxDepth + 1);
 			Subdivide(rightChildIdx, (axis + 1) % 3, maxDepth + 1);
 		}
 
-
 		Tri tri[N];
-		uint triIdx[N];
 		KDNode* kdNode = 0;
 		uint rootNodeIdx = 0, nodesUsed = 1;
 	};

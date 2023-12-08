@@ -1,6 +1,8 @@
 // Template, IGAD version 3
 // IGAD/NHTV/UU - Jacco Bikker - 2006-2022
 
+#define USE_SSE
+
 // C++ headers
 #include <chrono>
 #include <fstream>
@@ -12,6 +14,7 @@
 #include <algorithm>
 #include <assert.h>
 #include <io.h>
+#include <vector>
 
 // header for AVX, and every technology before it.
 // if your CPU does not support this (unlikely), include the appropriate header instead.
