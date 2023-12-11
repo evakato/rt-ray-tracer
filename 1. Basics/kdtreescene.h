@@ -21,7 +21,7 @@ namespace Tmpl8 {
 					grow(b.bmax);
 				}
 			}
-		}; 
+		};
 
 		struct KDNode
 		{
@@ -32,14 +32,8 @@ namespace Tmpl8 {
 		};
 
 		struct Bin { aabb bounds; int triCount = 0; };
-		
-		KDTreeScene() = default;
 
-		void Start() {
-			RenderUnityMesh();
-			//RenderTriangles();
-			BuildKDTree();
-		}
+		KDTreeScene() = default;
 
 		void RenderUnityMesh() {
 			FILE* file = fopen("../assets/unity.tri", "r");
@@ -139,11 +133,11 @@ namespace Tmpl8 {
 			{
 				Tri& leafTri = tri[node.tris[i]];
 				node.aabbMin = fminf(node.aabbMin, leafTri.vertex0),
-				node.aabbMin = fminf(node.aabbMin, leafTri.vertex1),
-				node.aabbMin = fminf(node.aabbMin, leafTri.vertex2),
-				node.aabbMax = fmaxf(node.aabbMax, leafTri.vertex0),
-				node.aabbMax = fmaxf(node.aabbMax, leafTri.vertex1),
-				node.aabbMax = fmaxf(node.aabbMax, leafTri.vertex2);
+					node.aabbMin = fminf(node.aabbMin, leafTri.vertex1),
+					node.aabbMin = fminf(node.aabbMin, leafTri.vertex2),
+					node.aabbMax = fmaxf(node.aabbMax, leafTri.vertex0),
+					node.aabbMax = fmaxf(node.aabbMax, leafTri.vertex1),
+					node.aabbMax = fmaxf(node.aabbMax, leafTri.vertex2);
 			}
 		}
 
@@ -196,7 +190,7 @@ namespace Tmpl8 {
 					leftArea[i] = leftBox.area();
 				}
 				for (int i = BINS - 2; i >= 0; i--) {
-					rightSum += rightBin[i+1].triCount;
+					rightSum += rightBin[i + 1].triCount;
 					rightCount[i] = rightSum;
 					rightBox.grow(rightBin[i + 1].bounds);
 					rightBox.bmin[a] = boundsMin + scale * (i + 1);
@@ -237,14 +231,14 @@ namespace Tmpl8 {
 			return box;
 		}
 #endif
-		void PrintTris(KDNode &node) {
+		void PrintTris(KDNode& node) {
 			for (int i = 0; i < N; i++)
-				printf("%f %f %f %f %f %f\n", tri[node.tris[i]].aabbMin[0],  tri[node.tris[i]].aabbMin[1], tri[node.tris[i]].aabbMin[2], tri[node.tris[i]].aabbMax[0], tri[node.tris[i]].aabbMax[1],tri[node.tris[i]].aabbMax[2]);
+				printf("%f %f %f %f %f %f\n", tri[node.tris[i]].aabbMin[0], tri[node.tris[i]].aabbMin[1], tri[node.tris[i]].aabbMin[2], tri[node.tris[i]].aabbMax[0], tri[node.tris[i]].aabbMax[1], tri[node.tris[i]].aabbMax[2]);
 		}
 
 		void Subdivide(uint nodeIdx, int maxDepth)
 		{
-			if (maxDepth >= 13 ) return;
+			if (maxDepth >= 13) return;
 			KDNode& node = kdNode[nodeIdx];
 
 			int axis;

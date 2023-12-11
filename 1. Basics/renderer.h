@@ -20,11 +20,13 @@ public:
 	void KeyUp( int key ) { /* implement if you want to handle keys */ }
 	void KeyDown( int key ) { /* implement if you want to handle keys */ }
 	// data members
+	void RenderUnityMesh();
 	int2 mousePos;
 	float4* accumulator;
 	//Scene scene;
 	BVHScene bvhScene;
 	KDTreeScene kdtreeScene;
+	GridScene gridScene;
 	Camera camera;
 	bool animating = true;
 	float anim_time = 0;

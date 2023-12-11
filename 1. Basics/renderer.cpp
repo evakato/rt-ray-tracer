@@ -1,13 +1,17 @@
 #include "precomp.h"
 
+
 // Initialize the renderer
 void Renderer::Init()
 {
 	// create fp32 rgb pixel buffer to render to
 	accumulator = (float4*)MALLOC64( SCRWIDTH * SCRHEIGHT * 16 );
 	memset( accumulator, 0, SCRWIDTH * SCRHEIGHT * 16 );
-	//bvhScene.Start();
-	kdtreeScene.Start();
+	//bvhScene.RenderUnityMesh();
+	//bvhScene.BuildBVH();
+	//kdtreeScene.BuildKDTree();
+	gridScene.Read_Mesh_OBJ();
+	gridScene.BuildGRID();
 }
 
 // Evaluate light transport
@@ -15,7 +19,8 @@ float3 Renderer::Trace( Ray& ray )
 {
 	//bvhScene.IntersectBVH(ray);
 	//kdtreeScene.FindNearestTri(ray);
-	kdtreeScene.IntersectKD(ray);
+	//kdtreeScene.IntersectKD(ray);
+	gridScene.IntersectGRID(ray);
 	if (ray.t < 1e30f) return 0.1f * float3(ray.t, ray.t, ray.t);
 	return 0;
 #if 0

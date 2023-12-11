@@ -43,6 +43,7 @@ public:
 	}
 	float3 IntersectionPoint() const { return O + t * D; }
 	// ray data
+
 #ifndef SPEEDTRIX
 	float3 O, D, rD;
 #else

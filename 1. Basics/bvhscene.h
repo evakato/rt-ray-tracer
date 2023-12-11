@@ -1,6 +1,7 @@
 namespace Tmpl8 {
-	static const int N = 12582;
-	//static const int N = 64;
+	//static const int N = 12000;
+	//static const int N = 12582;
+	static const int N = 64;
 	//static const int N = 1024;
 	static const int BINS = 8;
 
@@ -18,6 +19,9 @@ namespace Tmpl8 {
 		union { struct { float3 D; float d1; }; __m128 D4; };
 		union { struct { float3 rD; float d2; }; __m128 rD4; };
 		float t = 1e34f;
+		int intersect_TRI_count = 0;
+		int intersect_AABB_count = 0;
+		int traversal_count = 0;
 	};
 
 	class Tri {
@@ -56,6 +60,7 @@ namespace Tmpl8 {
 		float3 vertex0, vertex1, vertex2, centroid, aabbMin, aabbMax;
 	};
 
+
 	class BVHScene {
 	public:
 		struct BVHNode
@@ -86,11 +91,6 @@ namespace Tmpl8 {
 		struct Bin { aabb bounds; int triCount = 0; };
 
 		BVHScene() = default;
-
-		void Start() {
-			RenderUnityMesh();
-			BuildBVH();
-		}
 
 		void RenderUnityMesh() {
 			FILE* file = fopen("../assets/unity.tri", "r");
