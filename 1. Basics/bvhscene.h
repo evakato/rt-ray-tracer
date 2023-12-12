@@ -1,7 +1,7 @@
 namespace Tmpl8 {
 	//static const int N = 12000;
-	//static const int N = 12582;
-	static const int N = 64;
+	static const int N = 12582;
+	// static const int N = 64;
 	//static const int N = 1024;
 	static const int BINS = 8;
 
@@ -63,6 +63,7 @@ namespace Tmpl8 {
 
 	class BVHScene {
 	public:
+		string BVH_MODE = "NO_BASIC";
 		struct BVHNode
 		{
 			union { struct { float3 aabbMin; uint leftFirst; }; __m128 aabbMin4; };
@@ -178,7 +179,10 @@ namespace Tmpl8 {
 			UpdateNodeBounds(rootNodeIdx);
 
 			Timer t;
-			Subdivide(rootNodeIdx);
+			if (BVH_MODE == "BASIC")
+				Subdivide_BASIC(rootNodeIdx);
+			else
+				Subdivide(rootNodeIdx);
 			printf("BVH (%i nodes) constructed in %.2fms.\n", nodesUsed, t.elapsed() * 1000);
 		}
 
@@ -298,6 +302,47 @@ namespace Tmpl8 {
 			Subdivide(leftChildIdx);
 			Subdivide(rightChildIdx);
 		}
+
+		void Subdivide_BASIC(uint nodeIdx)
+		{
+			// terminate recursion
+			BVHNode& node = bvhNode[nodeIdx];
+			if (node.triCount <= 2) return;
+			// determine split axis and position
+			float3 extent = node.aabbMax - node.aabbMin;
+			int axis = 0;
+			if (extent.y > extent.x) axis = 1;
+			if (extent.z > extent[axis]) axis = 2;
+			float splitPos = node.aabbMin[axis] + extent[axis] * 0.5f;
+			// in-place partition
+			int i = node.leftFirst;
+			int j = i + node.triCount - 1;
+			while (i <= j)
+			{
+				if (tri[triIdx[i]].centroid[axis] < splitPos)
+					i++;
+				else
+					swap(triIdx[i], triIdx[j--]);
+			}
+			// abort split if one of the sides is empty
+			int leftCount = i - node.leftFirst;
+			if (leftCount == 0 || leftCount == node.triCount) return;
+			// create child nodes
+			int leftChildIdx = nodesUsed++;
+			int rightChildIdx = nodesUsed++;
+			bvhNode[leftChildIdx].leftFirst = node.leftFirst;
+			bvhNode[leftChildIdx].triCount = leftCount;
+			bvhNode[rightChildIdx].leftFirst = i;
+			bvhNode[rightChildIdx].triCount = node.triCount - leftCount;
+			node.leftFirst = leftChildIdx;
+			node.triCount = 0;
+			UpdateNodeBounds(leftChildIdx);
+			UpdateNodeBounds(rightChildIdx);
+			// recurse
+			Subdivide_BASIC(leftChildIdx);
+			Subdivide_BASIC(rightChildIdx);
+		}
+
 
 		Tri tri[N];
 		uint triIdx[N];

@@ -9,9 +9,10 @@ void Renderer::Init()
 	memset( accumulator, 0, SCRWIDTH * SCRHEIGHT * 16 );
 	//bvhScene.RenderUnityMesh();
 	//bvhScene.BuildBVH();
-	//kdtreeScene.BuildKDTree();
-	gridScene.Read_Mesh_OBJ();
-	gridScene.BuildGRID();
+	kdtreeScene.RenderUnityMesh();
+	kdtreeScene.BuildKDTree();
+	//gridScene.Read_Mesh_OBJ();
+	//gridScene.BuildGRID();
 }
 
 // Evaluate light transport
@@ -19,8 +20,8 @@ float3 Renderer::Trace( Ray& ray )
 {
 	//bvhScene.IntersectBVH(ray);
 	//kdtreeScene.FindNearestTri(ray);
-	//kdtreeScene.IntersectKD(ray);
-	gridScene.IntersectGRID(ray);
+	kdtreeScene.IntersectKD(ray);
+	// gridScene.IntersectGRID(ray);
 	if (ray.t < 1e30f) return 0.1f * float3(ray.t, ray.t, ray.t);
 	return 0;
 #if 0
