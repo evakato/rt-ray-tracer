@@ -44,17 +44,65 @@ void Renderer::Tick( float deltaTime )
 	// pixel loop
 	Timer t;
 	// lines are executed as OpenMP parallel tasks (disabled in DEBUG)
+
+	int max_traversal = 0, min_traversal = 0;
+	float avg_traversal = 0;
+	int max_intersect_TRI = 0, min_intersect_TRI = 0;
+	float avg_intersect_TRI = 0;
+	int max_intersect_AABB = 0, min_intersect_AABB = 0;
+	float avg_intersect_AABB = 0;
+	float total_traversal = 0;
+	float total_intersect_TRI = 0;
+	float total_intersect_AABB = 0;
+
+
 #pragma omp parallel for schedule(dynamic)
 	for (int y = 0; y < SCRHEIGHT; y++)
 	{
 		// trace a primary ray for each pixel on the line
+
 		for (int x = 0; x < SCRWIDTH; x++)
-		{	
-			float4 pixel = float4( Trace( camera.GetPrimaryRay( (float)x, (float)y ) ), 0 );
-			screen->pixels[x + y * SCRWIDTH] = RGBF32_to_RGB8( &pixel );
+		{
+			auto primary_ray = camera.GetPrimaryRay((float)x, (float)y);
+			auto pixel_color = Trace(primary_ray);
+			float4 pixel = float4(pixel_color, 0);
+			// translate accumulator contents to rgb32 pixels
+			screen->pixels[x + y * SCRWIDTH] = RGBF32_to_RGB8(&pixel);
+
 			accumulator[x + y * SCRWIDTH] = pixel;
+
+			max_traversal = max(max_traversal, primary_ray.traversal_count);
+			min_traversal = min(min_traversal, primary_ray.traversal_count);
+			total_traversal += primary_ray.traversal_count;
+
+			max_intersect_TRI = max(max_intersect_TRI, primary_ray.intersect_TRI_count);
+			min_intersect_TRI = min(min_intersect_TRI, primary_ray.intersect_TRI_count);
+			total_intersect_TRI += primary_ray.intersect_TRI_count;
+
+			max_intersect_AABB = max(max_intersect_AABB, primary_ray.intersect_AABB_count);
+			min_intersect_AABB = min(min_intersect_AABB, primary_ray.intersect_AABB_count);
+			total_intersect_AABB += primary_ray.intersect_AABB_count;
 		}
 	}
+
+	cout << "TRAVERSAL" << endl;
+	cout << "AVG:" << avg_traversal << " ";
+	cout << "MIN:" << min_traversal << " ";
+	cout << "MAX:" << max_traversal << " ";
+	cout << endl << endl;
+
+	cout << "INTERSECT_TRI" << endl;
+	cout << "AVG:" << avg_intersect_TRI << " ";
+	cout << "MIN:" << min_intersect_TRI << " ";
+	cout << "MAX:" << max_intersect_TRI << " ";
+	cout << endl << endl;
+
+	cout << "INTERSECT_AABB" << endl;
+	cout << "AVG:" << avg_intersect_AABB << " ";
+	cout << "MIN:" << min_intersect_AABB << " ";
+	cout << "MAX:" << max_intersect_AABB << " ";
+	cout << endl << endl;
+
 	// performance report - running average - ms, MRays/s
 	static float avg = 10, alpha = 1;
 	avg = (1 - alpha) * avg + alpha * t.elapsed() * 1000;
