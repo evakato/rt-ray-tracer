@@ -11,18 +11,25 @@ void Renderer::Init()
 	//bvhScene.BuildBVH();
 	kdtreeScene.RenderUnityMesh();
 	kdtreeScene.BuildKDTree();
+	bvhScene.RenderUnityMesh();
+	bvhScene.BuildBVH();
 	//gridScene.Read_Mesh_OBJ();
-	//gridScene.BuildGRID();
+	gridScene.RenderUnityMesh();
+	gridScene.BuildGRID();
 }
 
 // Evaluate light transport
 float3 Renderer::Trace( Ray& ray )
 {
-	  //bvhScene.IntersectBVH(ray);
-	  kdtreeScene.IntersectKD(ray);
-
+	  //
+	if (RT_MODE=="BVH")
+		bvhScene.IntersectBVH(ray);
+	if (RT_MODE=="KDTREE")
+		kdtreeScene.IntersectKD(ray);
+	if (RT_MODE == "GRID")
+		gridScene.IntersectGRID(ray);
 	//kdtreeScene.FindNearestTri(ray);
-	// gridScene.IntersectGRID(ray);
+	// 
 	if (ray.t < 1e30f) return 0.1f * float3(ray.t, ray.t, ray.t);
 	return 0;
 #if 0

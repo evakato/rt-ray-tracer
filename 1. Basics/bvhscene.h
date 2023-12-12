@@ -64,7 +64,7 @@ namespace Tmpl8 {
 
 	class BVHScene {
 	public:
-		string BVH_MODE = "NO_BASIC";
+		string BVH_MODE = "SAH";// SAH OR BASIC
 		struct BVHNode
 		{
 			union { struct { float3 aabbMin; uint leftFirst; }; __m128 aabbMin4; };

@@ -17,7 +17,11 @@ public:
 	void MouseDown( int button ) { /* implement if you want to detect mouse button presses */ }
 	void MouseMove( int x, int y ) { mousePos.x = x, mousePos.y = y; }
 	void MouseWheel( float y ) { /* implement if you want to handle the mouse wheel */ }
-	void KeyUp( int key ) { /* implement if you want to handle keys */ }
+	void KeyUp( int key ) { /* implement if you want to handle keys */ 
+		if (IsKeyDown(GLFW_KEY_B)) RT_MODE = "BVH";
+		if (IsKeyDown(GLFW_KEY_K)) RT_MODE = "KDTREE";
+		if (IsKeyDown(GLFW_KEY_G)) RT_MODE = "GRID";
+	}
 	void KeyDown( int key ) { /* implement if you want to handle keys */ }
 	// data members
 	void RenderUnityMesh();
@@ -28,6 +32,8 @@ public:
 	KDTreeScene kdtreeScene;
 	GridScene gridScene;
 	Camera camera;
+	string RT_MODE = "BVH";
+
 	bool animating = true;
 	float anim_time = 0;
 };
