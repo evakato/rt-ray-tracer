@@ -1,7 +1,8 @@
-This template is intended for students of Utrecht University.
 
-**Please refer to "_ getting started.pdf" for instructions.**
 
-Code is fully public domain. Use as you please.
+Built on the test bed developed by Professor Jacco(bikker.j@gmail.com)
 
-Contact me at bikker.j@gmail.com.
+Change viewpoint by using num button, 1: TopDown, 2: Left, 3: Front
+
+Change Ray-Tracing Method During Runtime: K for KDTREE, B for BVH, G for GRID.
+
