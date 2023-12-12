@@ -84,6 +84,9 @@ void Renderer::Tick( float deltaTime )
 			total_intersect_AABB += primary_ray.intersect_AABB_count;
 		}
 	}
+	avg_traversal = total_traversal / SCRHEIGHT / SCRWIDTH;
+	avg_intersect_AABB = total_intersect_AABB / SCRHEIGHT / SCRWIDTH;
+	avg_intersect_TRI = total_intersect_TRI / SCRHEIGHT / SCRWIDTH;
 
 	cout << "TRAVERSAL" << endl;
 	cout << "AVG:" << avg_traversal << " ";

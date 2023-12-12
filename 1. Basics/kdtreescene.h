@@ -58,8 +58,9 @@ namespace Tmpl8 {
 			}
 		}
 
-		inline float IntersectAABB(const Ray& ray, const float3 bmin, const float3 bmax)
+		inline float IntersectAABB( Ray& ray, const float3 bmin, const float3 bmax)
 		{
+			ray.intersect_AABB_count++;
 			float tx1 = (bmin.x - ray.O.x) * ray.rD.x, tx2 = (bmax.x - ray.O.x) * ray.rD.x;
 			float tmin = min(tx1, tx2), tmax = max(tx1, tx2);
 			float ty1 = (bmin.y - ray.O.y) * ray.rD.y, ty2 = (bmax.y - ray.O.y) * ray.rD.y;
@@ -77,10 +78,12 @@ namespace Tmpl8 {
 
 		void IntersectKD(Ray& ray)
 		{
+			ray.traversal_count++;
 			KDNode* node = &kdNode[rootNodeIdx], * stack[64];
 			uint stackPtr = 0;
 			while (1)
 			{
+				ray.traversal_count++;
 				if (node->tris.size() > 0)
 				{
 					for (uint i = 0; i < node->tris.size(); i++)

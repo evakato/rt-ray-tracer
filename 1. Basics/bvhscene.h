@@ -28,6 +28,7 @@ namespace Tmpl8 {
 	public:
 		void IntersectTri(Ray& ray)
 		{
+			ray.intersect_TRI_count++;
 			const float3 edge1 = vertex1 - vertex0;
 			const float3 edge2 = vertex2 - vertex0;
 			const float3 h = cross(ray.D, edge2);
