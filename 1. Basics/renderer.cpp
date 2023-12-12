@@ -18,9 +18,10 @@ void Renderer::Init()
 // Evaluate light transport
 float3 Renderer::Trace( Ray& ray )
 {
-	//  bvhScene.IntersectBVH(ray);
+	  //bvhScene.IntersectBVH(ray);
+	  kdtreeScene.IntersectKD(ray);
+
 	//kdtreeScene.FindNearestTri(ray);
-	kdtreeScene.IntersectKD(ray);
 	// gridScene.IntersectGRID(ray);
 	if (ray.t < 1e30f) return 0.1f * float3(ray.t, ray.t, ray.t);
 	return 0;

@@ -47,7 +47,11 @@ public:
 		if (IsKeyDown( GLFW_KEY_UP )) camTarget += speed * up, changed = true;
 		if (IsKeyDown( GLFW_KEY_DOWN )) camTarget -= speed * up, changed = true;
 		if (IsKeyDown( GLFW_KEY_LEFT )) camTarget -= speed * right, changed = true;
-		if (IsKeyDown( GLFW_KEY_RIGHT )) camTarget += speed * right, changed = true;
+		if (IsKeyDown(GLFW_KEY_RIGHT)) camTarget += speed * right, changed = true;
+		if (IsKeyDown(GLFW_KEY_1)) camTarget = float3(-2.66256, 2.25068, -1.41421), camPos = float3(-3.09958, 3.07972, -1.76307), changed = true;
+		if (IsKeyDown(GLFW_KEY_2)) camTarget = float3(-2.70643, -0.0108962, 2.23854), camPos=float3(-3.20559, 0.0220974, 3.10442), changed = true;
+		if (IsKeyDown(GLFW_KEY_3)) camTarget = float3(0.946654, -0.0176587, 1.18748), camPos=float3(1.82779, 0.0119818, 1.65942), changed = true;
+
 		if (!changed) return false;
 		ahead = normalize( camTarget - camPos );
 		up = normalize( cross( ahead, right ) );
