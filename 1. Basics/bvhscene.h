@@ -105,8 +105,9 @@ namespace Tmpl8 {
 			}
 		}
 
-		inline float IntersectAABB(const Ray& ray, const float3 bmin, const float3 bmax)
+		inline float IntersectAABB(Ray& ray, const float3 bmin, const float3 bmax)
 		{
+			ray.intersect_AABB_count++;
 			float tx1 = (bmin.x - ray.O.x) * ray.rD.x, tx2 = (bmax.x - ray.O.x) * ray.rD.x;
 			float tmin = min(tx1, tx2), tmax = max(tx1, tx2);
 			float ty1 = (bmin.y - ray.O.y) * ray.rD.y, ty2 = (bmax.y - ray.O.y) * ray.rD.y;
@@ -116,8 +117,9 @@ namespace Tmpl8 {
 			if (tmax >= tmin && tmin < ray.t && tmax > 0) return tmin; else return 1e30f;
 		}
 
-		float IntersectAABB_SSE(const Ray& ray, const __m128& bmin4, const __m128& bmax4)
+		float IntersectAABB_SSE( Ray& ray, const __m128& bmin4, const __m128& bmax4)
 		{
+			ray.intersect_AABB_count += 1;
 			static __m128 mask4 = _mm_cmpeq_ps(_mm_setzero_ps(), _mm_set_ps(1, 0, 0, 0));
 			__m128 t1 = _mm_mul_ps(_mm_sub_ps(_mm_and_ps(bmin4, mask4), ray.O4), ray.rD4);
 			__m128 t2 = _mm_mul_ps(_mm_sub_ps(_mm_and_ps(bmax4, mask4), ray.O4), ray.rD4);
@@ -139,6 +141,7 @@ namespace Tmpl8 {
 			uint stackPtr = 0;
 			while (1)
 			{
+				ray.traversal_count++;
 				if (node->isLeaf())
 				{
 					for (uint i = 0; i < node->triCount; i++)
@@ -149,6 +152,7 @@ namespace Tmpl8 {
 				BVHNode* child1 = &bvhNode[node->leftFirst];
 				BVHNode* child2 = &bvhNode[node->leftFirst + 1];
 #ifdef USE_SSE
+				
 				float dist1 = IntersectAABB_SSE(ray, child1->aabbMin4, child1->aabbMax4);
 				float dist2 = IntersectAABB_SSE(ray, child2->aabbMin4, child2->aabbMax4);
 #else
