@@ -371,6 +371,7 @@ public:
 
 
 //#include "scene.h"
+
 #include "bvhscene.h"
 #include "kdtreescene.h"
 #include "gridscene.h"

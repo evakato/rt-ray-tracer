@@ -3,8 +3,6 @@ namespace Tmpl8 {
 
 	class GridScene {
 	public:
-		struct TriEx { float2 uv0, uv1, uv2; float3 N0, N1, N2; };
-
 		int x_partition = 3;
 		int y_partition = 3;
 		int z_partition = 3;
