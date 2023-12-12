@@ -41,6 +41,9 @@
     <ClCompile Include="gridscene.cpp">
       <Filter>template</Filter>
     </ClCompile>
+    <ClCompile Include="bvhscene.cpp">
+      <Filter>template</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\template\common.h">

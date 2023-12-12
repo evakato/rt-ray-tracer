@@ -133,13 +133,14 @@ namespace Tmpl8 {
 				tri[i].IntersectTri(ray);
 			}
 		}
-
+		void Read_Mesh_OBJ();
 		void IntersectBVH(Ray& ray)
 		{
 			BVHNode* node = &bvhNode[rootNodeIdx], * stack[64];
 			uint stackPtr = 0;
 			while (1)
 			{
+				ray.traversal_count++;
 				if (node->isLeaf())
 				{
 					for (uint i = 0; i < node->triCount; i++)
@@ -173,7 +174,8 @@ namespace Tmpl8 {
 		{
 			bvhNode = (BVHNode*)_aligned_malloc(sizeof(BVHNode) * N * 2, 64);
 			for (int i = 0; i < N; i++) triIdx[i] = i;
-
+			for (int i = 0; i < N; i++)
+				tri[i].centroid = (tri[i].vertex0 + tri[i].vertex1 + tri[i].vertex2) * 0.3333f;
 			// assign all triangles to root node
 			BVHNode& root = bvhNode[rootNodeIdx];
 			root.leftFirst = 0;

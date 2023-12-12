@@ -7,9 +7,12 @@ void Renderer::Init()
 	// create fp32 rgb pixel buffer to render to
 	accumulator = (float4*)MALLOC64( SCRWIDTH * SCRHEIGHT * 16 );
 	memset( accumulator, 0, SCRWIDTH * SCRHEIGHT * 16 );
-	bvhScene.RenderUnityMesh();
-	// bvhScene.BuildBVH();
-	kdtreeScene.BuildKDTree();
+	// kdtreeScene.RenderTriangles();
+	// kdtreeScene.RenderUnityMesh();
+	// bvhScene.RenderUnityMesh();
+	bvhScene.Read_Mesh_OBJ();
+	bvhScene.BuildBVH();
+	// kdtreeScene.BuildKDTree();
 	// gridScene.Read_Mesh_OBJ();
 	//gridScene.BuildGRID();
 }
@@ -17,9 +20,9 @@ void Renderer::Init()
 // Evaluate light transport
 float3 Renderer::Trace( Ray& ray )
 {
-	//bvhScene.IntersectBVH(ray);
+	bvhScene.IntersectBVH(ray);
 	//kdtreeScene.FindNearestTri(ray);
-	kdtreeScene.IntersectKD(ray);
+	// kdtreeScene.IntersectKD(ray);
 	// gridScene.IntersectGRID(ray);
 	if (ray.t < 1e30f) return 0.1f * float3(ray.t, ray.t, ray.t);
 	return 0;

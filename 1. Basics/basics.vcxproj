@@ -140,6 +140,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\template\tmplmath.cpp" />
+    <ClCompile Include="bvhscene.cpp" />
     <ClCompile Include="gridscene.cpp" />
     <ClCompile Include="renderer.cpp" />
   </ItemGroup>
