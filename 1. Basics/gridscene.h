@@ -21,12 +21,12 @@ namespace Tmpl8 {
 		float3 cellSize;
 
 		GridScene() = default;
-		inline float IntersectAABB(const Ray& ray, const float3 bmin, const float3 bmax);
+		inline float IntersectAABB(Ray& ray, const float3 bmin, const float3 bmax);
 		bool WithinAABB(float3 v);
 		void RenderUnityMesh();
+		void RenderTriangles();
 		void Render_BrokenScreen();
 		void Read_Mesh_OBJ();
-		void RenderTriangles();
 		void IntersectGRID(Ray& ray);
 		bool isIntersectingAABB(const float3 p1, const float3 p2, const float3& aabbMin, const float3& aabbMax);
 		bool vertice_in_grid(A_GRID a_grid, Tri a_tri);

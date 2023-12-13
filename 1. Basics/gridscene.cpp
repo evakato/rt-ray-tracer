@@ -24,7 +24,7 @@ bool GridScene::WithinAABB(float3 v) {
 // Reference: https://www.scratchapixel.com/lessons/3d-basic-rendering/introduction-acceleration-structure/grid.html
 void GridScene::IntersectGRID(Ray& ray)
 {
-	//ray.traversal_count++;
+	ray.traversal_count++;
 	float t = IntersectAABB(ray, glb_aabbMin, glb_aabbMax);
 	if (t == 1e30f) return; // miss
 
@@ -88,8 +88,9 @@ void  GridScene::Render_BrokenScreen() {
 	}
 }
 
-inline float GridScene::IntersectAABB(const Ray& ray, const float3 bmin, const float3 bmax)
+inline float GridScene::IntersectAABB( Ray& ray, const float3 bmin, const float3 bmax)
 {
+	ray.intersect_AABB_count++;
 	float tx1 = (bmin.x - ray.O.x) * ray.rD.x, tx2 = (bmax.x - ray.O.x) * ray.rD.x;
 	float tmin = min(tx1, tx2), tmax = max(tx1, tx2);
 	float ty1 = (bmin.y - ray.O.y) * ray.rD.y, ty2 = (bmax.y - ray.O.y) * ray.rD.y;
