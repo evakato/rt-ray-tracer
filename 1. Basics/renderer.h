@@ -49,7 +49,7 @@ public:
 	GridScene gridScene;
 	Camera camera;
 	string RT_MODE = "GRID";
-	string SCENE_CODE = "2"; // 1 for the random triangle and 2 for the unity.tri
+	string SCENE_CODE = "1"; // 1 for the random triangle and 2 for the unity.tri
 	bool animating = true;
 	float anim_time = 0;
 };
