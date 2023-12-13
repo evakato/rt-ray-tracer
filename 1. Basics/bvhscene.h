@@ -105,6 +105,19 @@ namespace Tmpl8 {
 			}
 		}
 
+		void RenderTriangles() {
+			for (int i = 0; i < N; i++)
+			{
+				float3 r0 = float3(RandomFloat(), RandomFloat(), RandomFloat());
+				float3 r1 = float3(RandomFloat(), RandomFloat(), RandomFloat());
+				float3 r2 = float3(RandomFloat(), RandomFloat(), RandomFloat());
+				tri[i].vertex0 = r0 * 9 - float3(5);
+				tri[i].vertex1 = tri[i].vertex0 + r1, tri[i].vertex2 = tri[i].vertex0 + r2;
+				tri[i].centroid = tri[i].vertex0 + tri[i].vertex1 + tri[i].vertex2 * 0.3333f;
+				tri[i].ComputeAABB();
+			}
+		}
+
 		inline float IntersectAABB(Ray& ray, const float3 bmin, const float3 bmax)
 		{
 			ray.intersect_AABB_count++;

@@ -9,13 +9,18 @@ void Renderer::Init()
 	memset( accumulator, 0, SCRWIDTH * SCRHEIGHT * 16 );
 	//bvhScene.RenderUnityMesh();
 	//bvhScene.BuildBVH();
-	kdtreeScene.RenderUnityMesh();
-	kdtreeScene.BuildKDTree();
-	bvhScene.RenderUnityMesh();
-	bvhScene.BuildBVH();
-	//gridScene.Read_Mesh_OBJ();
-	gridScene.RenderUnityMesh();
-	gridScene.BuildGRID();
+	if (SCENE_CODE == "1") {
+		kdtreeScene.RenderTriangles();
+		kdtreeScene.BuildKDTree();
+		bvhScene.RenderTriangles();
+		bvhScene.BuildBVH();
+	}
+	if (SCENE_CODE == "2") {
+		kdtreeScene.RenderUnityMesh();
+		kdtreeScene.BuildKDTree();
+		bvhScene.RenderUnityMesh();
+		bvhScene.BuildBVH();
+	}
 }
 
 // Evaluate light transport

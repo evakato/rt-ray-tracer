@@ -21,6 +21,22 @@ public:
 		if (IsKeyDown(GLFW_KEY_B)) RT_MODE = "BVH";
 		if (IsKeyDown(GLFW_KEY_K)) RT_MODE = "KDTREE";
 		if (IsKeyDown(GLFW_KEY_G)) RT_MODE = "GRID";
+
+		if (IsKeyDown(GLFW_KEY_F1)) {
+			kdtreeScene.RenderUnityMesh();
+			kdtreeScene.BuildKDTree();
+		//	bvhScene.RenderUnityMesh();
+		//	bvhScene.BuildBVH();
+		}
+		if (IsKeyDown(GLFW_KEY_F2)) {
+			kdtreeScene.RenderTriangles();
+			kdtreeScene.BuildKDTree();
+		//	bvhScene.RenderTriangles();
+		//	bvhScene.BuildBVH();
+		}
+		if (IsKeyDown(GLFW_KEY_F3)) {
+
+		}
 	}
 	void KeyDown( int key ) { /* implement if you want to handle keys */ }
 	// data members
@@ -33,7 +49,7 @@ public:
 	GridScene gridScene;
 	Camera camera;
 	string RT_MODE = "BVH";
-
+	string SCENE_CODE = "1"; // 1 for the random triangle and 2 for the unity.tri
 	bool animating = true;
 	float anim_time = 0;
 };
