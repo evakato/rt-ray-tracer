@@ -10,16 +10,22 @@ void Renderer::Init()
 	//bvhScene.RenderUnityMesh();
 	//bvhScene.BuildBVH();
 	if (SCENE_CODE == "1") {
-		kdtreeScene.RenderTriangles();
-		kdtreeScene.BuildKDTree();
-		bvhScene.RenderTriangles();
-		bvhScene.BuildBVH();
+		//kdtreeScene.RenderTriangles();
+		//kdtreeScene.BuildKDTree();
+		//bvhScene.RenderTriangles();
+		//bvhScene.BuildBVH();
+		gridScene.RenderTriangles();
+
+		gridScene.BuildGRID();
+
 	}
 	if (SCENE_CODE == "2") {
-		kdtreeScene.RenderUnityMesh();
-		kdtreeScene.BuildKDTree();
-		bvhScene.RenderUnityMesh();
-		bvhScene.BuildBVH();
+		//kdtreeScene.RenderUnityMesh();
+		//kdtreeScene.BuildKDTree();
+		//bvhScene.RenderUnityMesh();
+		//bvhScene.BuildBVH();
+		gridScene.RenderUnityMesh();
+		gridScene.BuildGRID();
 	}
 }
 

@@ -4,6 +4,7 @@
 
 //#include "scene.h"
 #include "tiny_obj_loader.h"
+
 void GridScene::RenderUnityMesh() {
 	FILE* file = fopen("../assets/unity.tri", "r");
 	for (int t = 0; t < N; t++) {
@@ -14,25 +15,57 @@ void GridScene::RenderUnityMesh() {
 	}
 }
 
+bool GridScene::WithinAABB(float3 v) {
+	return v[0] >= glb_aabbMin[0] && v[0] <= glb_aabbMax[0]
+		&& v[1] >= glb_aabbMin[1] && v[1] <= glb_aabbMax[1]
+		&& v[2] >= glb_aabbMin[2] && v[2] <= glb_aabbMax[2];
+}
+
+// Reference: https://www.scratchapixel.com/lessons/3d-basic-rendering/introduction-acceleration-structure/grid.html
 void GridScene::IntersectGRID(Ray& ray)
 {
-	ray.traversal_count++;
+	//ray.traversal_count++;
+	float t = IntersectAABB(ray, glb_aabbMin, glb_aabbMax);
+	if (t == 1e30f) return; // miss
 
-	if (!IntersectAABB(ray, glb_aabbMin, glb_aabbMax))
-		return;
+	float3 deltaT, tMax;
+	int3 cell, step, exit;
+	for (int i = 0; i < 3; i++) {
+		float rayOrigCell = ((ray.O[i] + ray.D[i] * t) - glb_aabbMin[i]);
+		cell[i] = clamp<uint32_t>(floor(rayOrigCell / cellSize[i]), 0, x_partition - 1);
 
-
-	for (int grid_idx = 0; grid_idx < GRID_SIZE; grid_idx++) {
-		if (grids[grid_idx].triCount < 1)
-			continue;
-		if (!IntersectAABB(ray, grids[grid_idx].aabbMin, grids[grid_idx].aabbMax))
-			continue;
-
-		for (Tri& currentTri : grids[grid_idx].triangles) {
-			currentTri.IntersectTri(ray);
+		if (ray.D[i] < 0) {
+			deltaT[i] = -cellSize[i] / ray.D[i];
+			tMax[i] = t + (cell[i] * cellSize[i] - rayOrigCell) * (1 / ray.D[i]);
+			exit[i] = -1;
+			step[i] = -1;
 		}
-
+		else {
+			deltaT[i] = cellSize[i] / ray.D[i];
+			tMax[i] = t + ((cell[i] + 1) * cellSize[i] - rayOrigCell) * (1 / ray.D[i]);
+			exit[i] = x_partition;
+			step[i] = 1;
+		}
 	}
+
+	while (1) {
+		int grid_idx = cell[0] + cell[1] * x_partition + cell[2] * x_partition * y_partition;
+		for (Tri& currentTri : grids[grid_idx].triangles) {
+			if (currentTri.IntersectTriGrid(ray)) return;
+		}
+		uint8_t k =
+			((tMax[0] < tMax[1]) << 2) +
+			((tMax[0] < tMax[2]) << 1) +
+			((tMax[1] < tMax[2]));
+		static const uint8_t map[8] = { 2, 1, 2, 1, 2, 2, 0, 0 };
+		uint8_t axis = map[k];
+
+		if (ray.t < tMax[axis]) break;
+		cell[axis] += step[axis];
+		if (cell[axis] == exit[axis]) break;
+		tMax[axis] += deltaT[axis];
+	}
+
 }
 
 inline float GridScene::IntersectAABB(const Ray& ray, const float3 bmin, const float3 bmax)
@@ -102,7 +135,6 @@ void GridScene::Read_Mesh_OBJ() {
 	}
 }
 
-
 void GridScene::RenderTriangles() {
 	for (int i = 0; i < N; i++)
 	{
@@ -151,71 +183,51 @@ bool GridScene::isIntersectingAABB(const float3 p1, const float3 p2, const float
 
 void GridScene::BuildGRID()
 {
-
 	for (int i = 0; i < N; i++)
 	{
-		if (tri[i].vertex0.x < -100 ||
-			tri[i].vertex0.y < -100 ||
-			tri[i].vertex0.z < -100
-			)
-		{
-			cout << "wtf?";
-			break;
-		}
-		tri[i].centroid = (tri[i].vertex0 + tri[i].vertex1 + tri[i].vertex2) * 0.3333f;
 		glb_aabbMax = fmaxf(glb_aabbMax, tri[i].vertex0);
 		glb_aabbMax = fmaxf(glb_aabbMax, tri[i].vertex1);
 		glb_aabbMax = fmaxf(glb_aabbMax, tri[i].vertex2);
-
-
 		glb_aabbMin = fminf(glb_aabbMin, tri[i].vertex0);
 		glb_aabbMin = fminf(glb_aabbMin, tri[i].vertex1);
 		glb_aabbMin = fminf(glb_aabbMin, tri[i].vertex2);
-
-
 	}
 
-	// * 1.2 so there will be some border around the model
-	float unit_length_x = (glb_aabbMax.x - glb_aabbMin.x) * 1.2 / x_partition;
-	float unit_length_y = (glb_aabbMax.y - glb_aabbMin.y) * 1.2 / y_partition;
-	float unit_length_z = (glb_aabbMax.z - glb_aabbMin.z) * 1.2 / z_partition;
+	cellSize[0] = (glb_aabbMax.x - glb_aabbMin.x) / x_partition;
+	cellSize[1] = (glb_aabbMax.y - glb_aabbMin.y) / y_partition;
+	cellSize[2] = (glb_aabbMax.z - glb_aabbMin.z) / z_partition;
 	// construct grid
 	// add triangles to grid
 	//iterate grid and triangles.
-	cout << unit_length_x << endl;
-	cout << unit_length_y << endl;
-	cout << unit_length_z << endl;
+	cout << cellSize[0] << endl;
+	cout << cellSize[1] << endl;
+	cout << cellSize[2] << endl;
 	int grid_idx = 0;
 	for (int index_z = 0; index_z < z_partition; index_z++) {
 		for (int index_y = 0; index_y < y_partition; index_y++) {
 			for (int index_x = 0; index_x < z_partition; index_x++) {
 				//cout << index_x << "," << index_y << " "<<end;
-				grids[grid_idx].triCount = 0;
-				cout << glb_aabbMin.x + index_x * unit_length_x << "," << glb_aabbMin.y + index_y * unit_length_y << "," << glb_aabbMin.z + index_z * unit_length_z << "   ";
 				grids[grid_idx].aabbMin = float3(
-					glb_aabbMin.x + index_x * unit_length_x,
-					glb_aabbMin.y + index_y * unit_length_y,
-					glb_aabbMin.z + index_z * unit_length_z);
+					glb_aabbMin.x + index_x * cellSize[0],
+					glb_aabbMin.y + index_y * cellSize[1],
+					glb_aabbMin.z + index_z * cellSize[2]);
 				grids[grid_idx].aabbMax = float3(
-					glb_aabbMin.x + (index_x + 1) * unit_length_x,
-					glb_aabbMin.y + (index_y + 1) * unit_length_y,
-					glb_aabbMin.z + (index_z + 1) * unit_length_z);
+					glb_aabbMin.x + (index_x + 1) * cellSize[0],
+					glb_aabbMin.y + (index_y + 1) * cellSize[1],
+					glb_aabbMin.z + (index_z + 1) * cellSize[2]);
 				grid_idx++;
 			}
-			cout << endl;
 		}
-		cout << endl;
 	}
 
 	for (int grid_index = 0; grid_index < GRID_SIZE; grid_index++) {
 		for (int i = 0; i < N; i++) {
 			if (vertice_in_grid(grids[grid_index], tri[i])) {
 				grids[grid_index].triangles.push_back(tri[i]);
-				grids[grid_index].triCount++;
 			}
 		}
-		if (grids[grid_index].triCount > 0) {
-			cout << "IDX:" << grid_index << " " << grids[grid_index].triCount << " " << endl;
+		if (grids[grid_index].triangles.size() > 0) {
+			cout << "IDX:" << grid_index << " " << grids[grid_index].triangles.size() << " " << endl;
 		}
 	}
 

@@ -45,6 +45,25 @@ namespace Tmpl8 {
 			if (t > 0.0001f) ray.t = min(ray.t, t);
 		}
 
+		bool IntersectTriGrid(Ray& ray)
+		{
+			const float3 edge1 = vertex1 - vertex0;
+			const float3 edge2 = vertex2 - vertex0;
+			const float3 h = cross(ray.D, edge2);
+			const float a = dot(edge1, h);
+			if (a > -0.0001f && a < 0.0001f) return false; // ray parallel to triangle
+			const float f = 1 / a;
+			const float3 s = ray.O - vertex0;
+			const float u = f * dot(s, h);
+			if (u < 0 || u > 1) return false;
+			const float3 q = cross(s, edge1);
+			const float v = f * dot(ray.D, q);
+			if (v < 0 || u + v > 1) return false;
+			const float t = f * dot(edge2, q);
+			if (t > 0.0001f) { ray.t = min(ray.t, t); return true; }
+			return false;
+		}
+
 		void ComputeAABB() {
 			aabbMin = float3(1e30f);
 			aabbMax = float3(-1e30f);
