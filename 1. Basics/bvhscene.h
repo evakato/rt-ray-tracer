@@ -137,6 +137,26 @@ namespace Tmpl8 {
 			}
 		}
 
+		void Render_BrokenScreen() {
+			float3 r0 = float3(RandomFloat(), RandomFloat(), RandomFloat());
+			float3 r1 = float3(RandomFloat(), RandomFloat(), RandomFloat());
+			float3 r2 = float3(RandomFloat(), RandomFloat(), RandomFloat());
+
+			tri[0].vertex0 = r0;
+			tri[0].vertex1 = r1;
+			tri[0].vertex2 = r2;
+
+			for (int i = 1; i < N; i++)
+			{
+				float3 new_r = float3(RandomFloat(), RandomFloat(), RandomFloat());
+				tri[i].vertex0 = tri[i - 1].vertex2;
+				tri[i].vertex1 = tri[i - 1].vertex0;
+				tri[i].vertex2 = tri[i].vertex0 + new_r;
+				tri[i].centroid = tri[i].vertex0 + tri[i].vertex1 + tri[i].vertex2 * 0.3333f;
+				tri[i].ComputeAABB();
+			}
+		}
+
 		inline float IntersectAABB(Ray& ray, const float3 bmin, const float3 bmax)
 		{
 			ray.intersect_AABB_count++;

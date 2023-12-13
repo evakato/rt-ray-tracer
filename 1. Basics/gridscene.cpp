@@ -68,6 +68,26 @@ void GridScene::IntersectGRID(Ray& ray)
 
 }
 
+
+void  GridScene::Render_BrokenScreen() {
+	float3 r0 = float3(RandomFloat(), RandomFloat(), RandomFloat());
+	float3 r1 = float3(RandomFloat(), RandomFloat(), RandomFloat());
+	float3 r2 = float3(RandomFloat(), RandomFloat(), RandomFloat());
+
+	tri[0].vertex0 = r0;
+	tri[0].vertex1 = r1;
+	tri[0].vertex2 = r2;
+
+	for (int i = 1; i < N; i++)
+	{
+		float3 new_r = float3(RandomFloat(), RandomFloat(), RandomFloat());
+		tri[i].vertex0 = tri[i - 1].vertex2;
+		tri[i].vertex1 = tri[i - 1].vertex0;
+		tri[i].vertex2 = tri[i].vertex0 + new_r;
+		tri[i].centroid = tri[i].vertex0 + tri[i].vertex1 + tri[i].vertex2 * 0.3333f;
+	}
+}
+
 inline float GridScene::IntersectAABB(const Ray& ray, const float3 bmin, const float3 bmax)
 {
 	float tx1 = (bmin.x - ray.O.x) * ray.rD.x, tx2 = (bmax.x - ray.O.x) * ray.rD.x;
@@ -124,7 +144,7 @@ void GridScene::Read_Mesh_OBJ() {
 				if (v == 2) {
 					tri[f].vertex2 = float3(vx, vy, vz) * 15;
 				}
-
+				tri[f].centroid = tri[f].vertex0 + tri[f].vertex1 + tri[f].vertex2 * 0.3333f;
 			}
 			index_offset += fv;
 
@@ -143,6 +163,7 @@ void GridScene::RenderTriangles() {
 		float3 r2 = float3(RandomFloat(), RandomFloat(), RandomFloat());
 		GridScene::tri[i].vertex0 = r0 * 9 - float3(5);
 		GridScene::tri[i].vertex1 = GridScene::tri[i].vertex0 + r1, GridScene::tri[i].vertex2 = GridScene::tri[i].vertex0 + r2;
+		GridScene::tri[i].centroid = GridScene::tri[i].vertex0 + r1, GridScene::tri[i].vertex1 = GridScene::tri[i].vertex2 * 0.3333f;
 	}
 }
 

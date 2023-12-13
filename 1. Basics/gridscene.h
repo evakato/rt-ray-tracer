@@ -24,6 +24,7 @@ namespace Tmpl8 {
 		inline float IntersectAABB(const Ray& ray, const float3 bmin, const float3 bmax);
 		bool WithinAABB(float3 v);
 		void RenderUnityMesh();
+		void Render_BrokenScreen();
 		void Read_Mesh_OBJ();
 		void RenderTriangles();
 		void IntersectGRID(Ray& ray);

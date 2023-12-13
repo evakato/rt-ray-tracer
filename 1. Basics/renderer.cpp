@@ -29,6 +29,14 @@ void Renderer::Init()
 		bvhScene.RenderUnityMesh();
 		bvhScene.BuildBVH();
 	}
+	if (SCENE_CODE == "3") {
+		kdtreeScene.Render_BrokenScreen();
+		kdtreeScene.BuildKDTree();
+		gridScene.Render_BrokenScreen();
+		gridScene.BuildGRID();
+		bvhScene.Render_BrokenScreen();
+		bvhScene.BuildBVH();
+	}
 }
 
 // Evaluate light transport
