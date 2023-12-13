@@ -37,6 +37,8 @@ void Renderer::Init()
 		bvhScene.Render_BrokenScreen();
 		bvhScene.BuildBVH();
 	}
+	//gridScene.Read_Mesh_OBJ();
+	//gridScene.BuildGRID();
 }
 
 // Evaluate light transport
@@ -117,23 +119,28 @@ void Renderer::Tick( float deltaTime )
 	avg_intersect_AABB = total_intersect_AABB / SCRHEIGHT / SCRWIDTH;
 	avg_intersect_TRI = total_intersect_TRI / SCRHEIGHT / SCRWIDTH;
 
-	cout << "TRAVERSAL" << endl;
-	cout << "AVG:" << avg_traversal << " ";
+	cout << "TRAVERSAL:   ";
 	cout << "MIN:" << min_traversal << " ";
 	cout << "MAX:" << max_traversal << " ";
-	cout << endl << endl;
+	cout << "AVG:" << avg_traversal << " ";
+	cout << endl;
 
-	cout << "INTERSECT_TRI" << endl;
-	cout << "AVG:" << avg_intersect_TRI << " ";
+	cout << "INTERSECT_TRI:   ";
 	cout << "MIN:" << min_intersect_TRI << " ";
 	cout << "MAX:" << max_intersect_TRI << " ";
-	cout << endl << endl;
+	cout << "AVG:" << avg_intersect_TRI << " ";
+	cout << endl;
 
-	cout << "INTERSECT_AABB" << endl;
-	cout << "AVG:" << avg_intersect_AABB << " ";
+	cout << "INTERSECT_AABB:  ";
 	cout << "MIN:" << min_intersect_AABB << " ";
 	cout << "MAX:" << max_intersect_AABB << " ";
-	cout << endl << endl;
+	cout << "AVG:" << avg_intersect_AABB << " ";
+	cout << endl;
+
+	cout << "CAM POS: " << camera.camPos.x << "," << camera.camPos.y << "," << camera.camPos.z << "   ";
+	cout << "CAM TGT: " << camera.camTarget.x << "," << camera.camTarget.y<< "," << camera.camTarget.z << "   ";
+	cout << "CURRENT TRACING METHOD:" << RT_MODE << endl;
+
 
 	// performance report - running average - ms, MRays/s
 	static float avg = 10, alpha = 1;
@@ -141,6 +148,7 @@ void Renderer::Tick( float deltaTime )
 	if (alpha > 0.05f) alpha *= 0.5f;
 	float fps = 1000.0f / avg, rps = (SCRWIDTH * SCRHEIGHT) / avg;
 	printf( "%5.2fms (%.1ffps) - %.1fMrays/s\n", avg, fps, rps / 1000 );
+	cout << endl << endl;
 	// handle user input
 	camera.HandleInput( deltaTime );
 }

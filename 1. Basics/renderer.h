@@ -48,8 +48,8 @@ public:
 	KDTreeScene kdtreeScene;
 	GridScene gridScene;
 	Camera camera;
-	string RT_MODE = "KDTREE";
-	string SCENE_CODE = "1"; // 1 for the random triangle and 2 for the unity.tri
+	string RT_MODE = "GRID";
+	string SCENE_CODE = "1"; // 1 for the random triangle and 2 for the unity.tri and 3 for the Broken_screen
 	bool animating = true;
 	float anim_time = 0;
 };
