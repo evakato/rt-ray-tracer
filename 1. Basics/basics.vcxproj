@@ -165,7 +165,9 @@
     <ClInclude Include="bvhscene.h" />
     <ClInclude Include="gridscene.h" />
     <ClInclude Include="kdtreescene.h" />
+    <ClInclude Include="ray.h" />
     <ClInclude Include="renderer.h" />
+    <ClInclude Include="tri.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\template\LICENSE" />

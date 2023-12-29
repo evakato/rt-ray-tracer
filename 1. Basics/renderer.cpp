@@ -138,7 +138,7 @@ void Renderer::Tick( float deltaTime )
 	cout << endl;
 
 	cout << "CAM POS: " << camera.camPos.x << "," << camera.camPos.y << "," << camera.camPos.z << "   ";
-	cout << "CAM TGT: " << camera.camTarget.x << "," << camera.camTarget.y<< "," << camera.camTarget.z << "   ";
+	cout << "CAM TGT: " << camera.camTarget.x << "," << camera.camTarget.y<< "," << camera.camTarget.z << "   "<<endl;
 	cout << "CURRENT TRACING METHOD:" << RT_MODE << endl;
 
 

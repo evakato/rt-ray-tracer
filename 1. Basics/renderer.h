@@ -35,6 +35,8 @@ public:
 		//	bvhScene.BuildBVH();
 		}
 		if (IsKeyDown(GLFW_KEY_F3)) {
+			camera.camPos = float3(-8.32943, -23.6732, -32.2682);
+			camera.camTarget = float3(-7.875, -23.1848, -31.5232);
 
 		}
 	}
@@ -48,8 +50,8 @@ public:
 	KDTreeScene kdtreeScene;
 	GridScene gridScene;
 	Camera camera;
-	string RT_MODE = "GRID";
-	string SCENE_CODE = "1"; // 1 for the random triangle and 2 for the unity.tri and 3 for the Broken_screen
+	string RT_MODE = "BVH";
+	string SCENE_CODE = "3"; // 1 for the random triangle and 2 for the unity.tri and 3 for the Broken_screen
 	bool animating = true;
 	float anim_time = 0;
 };
