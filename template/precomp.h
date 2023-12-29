@@ -111,7 +111,6 @@ using namespace std;
 
 // namespaces
 using namespace Tmpl8;
-
 // math classes
 #include "tmplmath.h"
 
@@ -369,6 +368,8 @@ public:
 	void Tick() {}
 };
 
+static const int N = 12582;
+static const int BINS = 8;
 
 //#include "scene.h"
 #include "ray.h"

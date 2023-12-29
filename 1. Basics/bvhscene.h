@@ -1,9 +1,6 @@
 namespace Tmpl8 {
 	//static const int N = 12000;
-	static const int N = 12582;
-	// static const int N = 64;
-	//static const int N = 1024;
-	static const int BINS = 8;
+
 
 
 
