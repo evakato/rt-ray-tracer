@@ -23,13 +23,13 @@ public:
 		if (IsKeyDown(GLFW_KEY_G)) RT_MODE = "GRID";
 
 		if (IsKeyDown(GLFW_KEY_F1)) {
-			kdtreeScene.RenderUnityMesh();
+			RenderUnityMesh(kdtreeScene.tri);
 			kdtreeScene.BuildKDTree();
 		//	bvhScene.RenderUnityMesh();
 		//	bvhScene.BuildBVH();
 		}
 		if (IsKeyDown(GLFW_KEY_F2)) {
-			kdtreeScene.RenderTriangles();
+			RenderTriangles(kdtreeScene.tri);
 			kdtreeScene.BuildKDTree();
 		//	bvhScene.RenderTriangles();
 		//	bvhScene.BuildBVH();
@@ -42,7 +42,7 @@ public:
 	}
 	void KeyDown( int key ) { /* implement if you want to handle keys */ }
 	// data members
-	void RenderUnityMesh();
+	//void RenderUnityMesh();
 	int2 mousePos;
 	float4* accumulator;
 	//Scene scene;
@@ -54,6 +54,7 @@ public:
 	string SCENE_CODE = "3"; // 1 for the random triangle and 2 for the unity.tri and 3 for the Broken_screen
 	bool animating = true;
 	float anim_time = 0;
+
 };
 
 } // namespace Tmpl8

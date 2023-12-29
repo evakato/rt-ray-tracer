@@ -5,15 +5,6 @@
 //#include "scene.h"
 #include "tiny_obj_loader.h"
 
-void GridScene::RenderUnityMesh() {
-	FILE* file = fopen("../assets/unity.tri", "r");
-	for (int t = 0; t < N; t++) {
-		fscanf(file, "%f %f %f %f %f %f %f %f %f\n",
-			&tri[t].vertex0.x, &tri[t].vertex0.y, &tri[t].vertex0.z,
-			&tri[t].vertex1.x, &tri[t].vertex1.y, &tri[t].vertex1.z,
-			&tri[t].vertex2.x, &tri[t].vertex2.y, &tri[t].vertex2.z);
-	}
-}
 
 bool GridScene::WithinAABB(float3 v) {
 	return v[0] >= glb_aabbMin[0] && v[0] <= glb_aabbMax[0]
@@ -156,17 +147,6 @@ void GridScene::Read_Mesh_OBJ() {
 	}
 }
 
-void GridScene::RenderTriangles() {
-	for (int i = 0; i < N; i++)
-	{
-		float3 r0 = float3(RandomFloat(), RandomFloat(), RandomFloat());
-		float3 r1 = float3(RandomFloat(), RandomFloat(), RandomFloat());
-		float3 r2 = float3(RandomFloat(), RandomFloat(), RandomFloat());
-		GridScene::tri[i].vertex0 = r0 * 9 - float3(5);
-		GridScene::tri[i].vertex1 = GridScene::tri[i].vertex0 + r1, GridScene::tri[i].vertex2 = GridScene::tri[i].vertex0 + r2;
-		GridScene::tri[i].centroid = GridScene::tri[i].vertex0 + r1, GridScene::tri[i].vertex1 = GridScene::tri[i].vertex2 * 0.3333f;
-	}
-}
 
 bool  GridScene::vertice_in_grid(A_GRID a_grid, Tri a_tri)
 {

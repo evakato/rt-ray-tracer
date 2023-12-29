@@ -10,31 +10,28 @@ void Renderer::Init()
 	//bvhScene.RenderUnityMesh();
 	//bvhScene.BuildBVH();
 	if (SCENE_CODE == "1") {
-		kdtreeScene.RenderTriangles();
+		RenderTriangles(kdtreeScene.tri);
+		RenderTriangles(gridScene.tri);
+		RenderTriangles(bvhScene.tri);
 		kdtreeScene.BuildKDTree();
-
-		gridScene.RenderTriangles();
-
 		gridScene.BuildGRID();
-		bvhScene.RenderTriangles();
 		bvhScene.BuildBVH();
 
 	}
 	if (SCENE_CODE == "2") {
-		kdtreeScene.RenderUnityMesh();
+		RenderUnityMesh(kdtreeScene.tri);
+		RenderUnityMesh(gridScene.tri);
+		RenderUnityMesh(bvhScene.tri);
 		kdtreeScene.BuildKDTree();
-
-		gridScene.RenderUnityMesh();
 		gridScene.BuildGRID();
-		bvhScene.RenderUnityMesh();
 		bvhScene.BuildBVH();
 	}
 	if (SCENE_CODE == "3") {
-		kdtreeScene.Render_BrokenScreen();
+		Render_BrokenScreen(kdtreeScene.tri);
+		Render_BrokenScreen(gridScene.tri);
+		Render_BrokenScreen(bvhScene.tri);
 		kdtreeScene.BuildKDTree();
-		gridScene.Render_BrokenScreen();
 		gridScene.BuildGRID();
-		bvhScene.Render_BrokenScreen();
 		bvhScene.BuildBVH();
 	}
 	//gridScene.Read_Mesh_OBJ();
