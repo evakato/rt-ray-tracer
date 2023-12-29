@@ -10,6 +10,7 @@ void Tmpl8::RenderUnityMesh(Tri tri[]) {
 			&tri[t].vertex1.x, &tri[t].vertex1.y, &tri[t].vertex1.z,
 			&tri[t].vertex2.x, &tri[t].vertex2.y, &tri[t].vertex2.z);
 		tri[t].centroid = tri[t].vertex0 + tri[t].vertex1 + tri[t].vertex2 * 0.3333f;
+		tri[t].ComputeAABB();
 	}
 }
 

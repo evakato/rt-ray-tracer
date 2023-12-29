@@ -51,7 +51,7 @@ public:
 	GridScene gridScene;
 	Camera camera;
 	string RT_MODE = "BVH";
-	string SCENE_CODE = "3"; // 1 for the random triangle and 2 for the unity.tri and 3 for the Broken_screen
+	string SCENE_CODE = "2"; // 1 for the random triangle and 2 for the unity.tri and 3 for the Broken_screen
 	bool animating = true;
 	float anim_time = 0;
 
