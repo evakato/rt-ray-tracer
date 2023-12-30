@@ -140,7 +140,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\template\tmplmath.cpp" />
-    <ClCompile Include="gridscene.cpp" />
+    <ClCompile Include="bvhscene.cpp" />
     <ClCompile Include="renderer.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -162,9 +162,9 @@
     <ClInclude Include="..\template\surface.h" />
     <ClInclude Include="..\template\tiny_obj_loader.h" />
     <ClInclude Include="..\template\tmplmath.h" />
+    <ClInclude Include="basics.h" />
     <ClInclude Include="bvhscene.h" />
-    <ClInclude Include="gridscene.h" />
-    <ClInclude Include="kdtreescene.h" />
+    <ClInclude Include="mesh.h" />
     <ClInclude Include="renderer.h" />
   </ItemGroup>
   <ItemGroup>

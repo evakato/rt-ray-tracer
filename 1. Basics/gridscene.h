@@ -21,7 +21,6 @@ namespace Tmpl8 {
 		float3 cellSize;
 
 		GridScene() = default;
-		inline float IntersectAABB(Ray& ray, const float3 bmin, const float3 bmax);
 		bool WithinAABB(float3 v);
 		void RenderUnityMesh();
 		void RenderTriangles();

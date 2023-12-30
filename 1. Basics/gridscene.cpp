@@ -88,18 +88,6 @@ void  GridScene::Render_BrokenScreen() {
 	}
 }
 
-inline float GridScene::IntersectAABB( Ray& ray, const float3 bmin, const float3 bmax)
-{
-	ray.intersect_AABB_count++;
-	float tx1 = (bmin.x - ray.O.x) * ray.rD.x, tx2 = (bmax.x - ray.O.x) * ray.rD.x;
-	float tmin = min(tx1, tx2), tmax = max(tx1, tx2);
-	float ty1 = (bmin.y - ray.O.y) * ray.rD.y, ty2 = (bmax.y - ray.O.y) * ray.rD.y;
-	tmin = max(tmin, min(ty1, ty2)), tmax = min(tmax, max(ty1, ty2));
-	float tz1 = (bmin.z - ray.O.z) * ray.rD.z, tz2 = (bmax.z - ray.O.z) * ray.rD.z;
-	tmin = max(tmin, min(tz1, tz2)), tmax = min(tmax, max(tz1, tz2));
-	if (tmax >= tmin && tmin < ray.t && tmax > 0) return tmin; else return 1e30f;
-}
-
 void GridScene::Read_Mesh_OBJ() {
 	std::string inputfile = "../assets/m1354.obj";
 

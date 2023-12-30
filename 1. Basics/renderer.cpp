@@ -7,50 +7,29 @@ void Renderer::Init()
 	// create fp32 rgb pixel buffer to render to
 	accumulator = (float4*)MALLOC64( SCRWIDTH * SCRHEIGHT * 16 );
 	memset( accumulator, 0, SCRWIDTH * SCRHEIGHT * 16 );
-	//bvhScene.RenderUnityMesh();
-	//bvhScene.BuildBVH();
-	if (SCENE_CODE == "1") {
-		kdtreeScene.RenderTriangles();
-		kdtreeScene.BuildKDTree();
 
-		gridScene.RenderTriangles();
-
-		gridScene.BuildGRID();
-		bvhScene.RenderTriangles();
-		bvhScene.BuildBVH();
-
+	BVHScene* bvh = new BVHScene("../assets/armadillo.tri", 30000);
+	for (int i = 0; i < 256; i++)
+		bvhInstance[i] = BVHInstance(bvh);
+	tlas = TLAS(bvhInstance, 256);
+	// set up spacy armadillo army
+	position = new float3[256];
+	direction = new float3[256];
+	orientation = new float3[256];
+	for (int i = 0; i < 256; i++)
+	{
+		position[i] = float3(RandomFloat(), RandomFloat(), RandomFloat()) - 0.5f;
+		position[i] *= 4;
+		direction[i] = normalize(position[i]) * 0.05f;
+		orientation[i] = float3(RandomFloat(), RandomFloat(), RandomFloat()) * 2.5f;
 	}
-	if (SCENE_CODE == "2") {
-		kdtreeScene.RenderUnityMesh();
-		kdtreeScene.BuildKDTree();
 
-		gridScene.RenderUnityMesh();
-		gridScene.BuildGRID();
-		bvhScene.RenderUnityMesh();
-		bvhScene.BuildBVH();
-	}
-	if (SCENE_CODE == "3") {
-		kdtreeScene.Render_BrokenScreen();
-		kdtreeScene.BuildKDTree();
-		gridScene.Render_BrokenScreen();
-		gridScene.BuildGRID();
-		bvhScene.Render_BrokenScreen();
-		bvhScene.BuildBVH();
-	}
 }
 
 // Evaluate light transport
 float3 Renderer::Trace( Ray& ray )
 {
-	  //
-	if (RT_MODE=="BVH")
-		bvhScene.IntersectBVH(ray);
-	if (RT_MODE=="KDTREE")
-		kdtreeScene.IntersectKD(ray);
-	if (RT_MODE == "GRID")
-		gridScene.IntersectGRID(ray);
-	//kdtreeScene.FindNearestTri(ray);
-	// 
+	tlas.Intersect(ray);
 	if (ray.t < 1e30f) return 0.1f * float3(ray.t, ray.t, ray.t);
 	return 0;
 #if 0
@@ -71,25 +50,25 @@ void Renderer::Tick( float deltaTime )
 	// animation
 	//if (animating) scene.SetTime( anim_time += deltaTime * 0.002f );
 	// pixel loop
+	for (int i = 0; i < 256; i++)
+	{
+		mat4 R = mat4::RotateX(orientation[i].x) *
+			mat4::RotateY(orientation[i].y) *
+			mat4::RotateZ(orientation[i].z) * mat4::Scale(0.2f);
+		bvhInstance[i].SetTransform(mat4::Translate(position[i]) * R);
+		position[i] += direction[i], orientation[i] += direction[i];
+		if (position[i].x < -3 || position[i].x > 3) direction[i].x *= -1;
+		if (position[i].y < -3 || position[i].y > 3) direction[i].y *= -1;
+		if (position[i].z < -3 || position[i].z > 3) direction[i].z *= -1;
+	}
 	Timer t;
+	tlas.Build();
+
 	// lines are executed as OpenMP parallel tasks (disabled in DEBUG)
-
-	int max_traversal = 0, min_traversal = 0;
-	float avg_traversal = 0;
-	int max_intersect_TRI = 0, min_intersect_TRI = 0;
-	float avg_intersect_TRI = 0;
-	int max_intersect_AABB = 0, min_intersect_AABB = 0;
-	float avg_intersect_AABB = 0;
-	float total_traversal = 0;
-	float total_intersect_TRI = 0;
-	float total_intersect_AABB = 0;
-
-
 #pragma omp parallel for schedule(dynamic)
 	for (int y = 0; y < SCRHEIGHT; y++)
 	{
 		// trace a primary ray for each pixel on the line
-
 		for (int x = 0; x < SCRWIDTH; x++)
 		{
 			auto primary_ray = camera.GetPrimaryRay((float)x, (float)y);
@@ -97,43 +76,9 @@ void Renderer::Tick( float deltaTime )
 			float4 pixel = float4(pixel_color, 0);
 			// translate accumulator contents to rgb32 pixels
 			screen->pixels[x + y * SCRWIDTH] = RGBF32_to_RGB8(&pixel);
-
 			accumulator[x + y * SCRWIDTH] = pixel;
-
-			max_traversal = max(max_traversal, primary_ray.traversal_count);
-			min_traversal = min(min_traversal, primary_ray.traversal_count);
-			total_traversal += primary_ray.traversal_count;
-
-			max_intersect_TRI = max(max_intersect_TRI, primary_ray.intersect_TRI_count);
-			min_intersect_TRI = min(min_intersect_TRI, primary_ray.intersect_TRI_count);
-			total_intersect_TRI += primary_ray.intersect_TRI_count;
-
-			max_intersect_AABB = max(max_intersect_AABB, primary_ray.intersect_AABB_count);
-			min_intersect_AABB = min(min_intersect_AABB, primary_ray.intersect_AABB_count);
-			total_intersect_AABB += primary_ray.intersect_AABB_count;
 		}
 	}
-	avg_traversal = total_traversal / SCRHEIGHT / SCRWIDTH;
-	avg_intersect_AABB = total_intersect_AABB / SCRHEIGHT / SCRWIDTH;
-	avg_intersect_TRI = total_intersect_TRI / SCRHEIGHT / SCRWIDTH;
-
-	cout << "TRAVERSAL" << endl;
-	cout << "AVG:" << avg_traversal << " ";
-	cout << "MIN:" << min_traversal << " ";
-	cout << "MAX:" << max_traversal << " ";
-	cout << endl << endl;
-
-	cout << "INTERSECT_TRI" << endl;
-	cout << "AVG:" << avg_intersect_TRI << " ";
-	cout << "MIN:" << min_intersect_TRI << " ";
-	cout << "MAX:" << max_intersect_TRI << " ";
-	cout << endl << endl;
-
-	cout << "INTERSECT_AABB" << endl;
-	cout << "AVG:" << avg_intersect_AABB << " ";
-	cout << "MIN:" << min_intersect_AABB << " ";
-	cout << "MAX:" << max_intersect_AABB << " ";
-	cout << endl << endl;
 
 	// performance report - running average - ms, MRays/s
 	static float avg = 10, alpha = 1;

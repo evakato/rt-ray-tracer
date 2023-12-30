@@ -371,9 +371,9 @@ public:
 
 
 //#include "scene.h"
+#include "basics.h"
 #include "bvhscene.h"
-#include "kdtreescene.h"
-#include "gridscene.h"
+#include "mesh.h"
 #include "camera.h"
 #include "renderer.h"
 
