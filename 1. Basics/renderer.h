@@ -10,6 +10,7 @@ public:
 	// game flow methods
 	void Init();
 	float3 Trace( Ray& ray );
+	float3 TraceAdaptiveSample(float x, float y, int depth, int SamplePerPixel);
 	void Tick( float deltaTime );
 	void UI();
 	void Shutdown() { /* implement if you want to do things on shutdown */ }
